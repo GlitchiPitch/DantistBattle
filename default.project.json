@@ -1,0 +1,12 @@
+{
+  "name": "DantistBattle",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$path": "src/Shared"
+    },
+    "ServerScriptService": {
+      "$path": "src/Server"
+    }
+  }
+}
