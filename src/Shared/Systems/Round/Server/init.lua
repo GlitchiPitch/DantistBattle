@@ -7,6 +7,7 @@ local Events = RoundSystem.Events
 local Handlers = RoundSystem.Handlers
 
 local PlayerHandler = require(Handlers.Player)
+local QuestsHandler = require(Handlers.Quests)
 
 local event = Events.Event
 local eventActions = require(event.Actions)
