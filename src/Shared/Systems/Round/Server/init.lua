@@ -32,7 +32,8 @@ local function teleportPlayers(team: Types.TeamType)
 end
 
 local function startRound()
-    
+    -- for quests handler
+    event:Fire(eventActions.startRound)
 end
 
 local function startGame(team: Types.TeamType)
@@ -52,6 +53,7 @@ local function eventConnect(action: string, ...: any)
 end
 
 local function initialize()
+    QuestsHandler.initialize()
     PlayerHandler.initialize()
 
     table.insert(
