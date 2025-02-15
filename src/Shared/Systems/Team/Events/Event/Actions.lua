@@ -1,3 +1,5 @@
-local Actions = {}
+local Actions = {
+    teamReady = "teamReady",
+}
 
 return Actions

@@ -1,4 +1,5 @@
 local Actions = {
+    startGame = "startGame",
     startRound = "startRound",
 }
 
