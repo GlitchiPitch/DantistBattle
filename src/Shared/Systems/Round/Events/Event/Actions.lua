@@ -1,3 +1,5 @@
-local Actions = {}
+local Actions = {
+    startRound = "startRound",
+}
 
 return Actions
