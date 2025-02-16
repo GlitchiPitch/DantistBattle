@@ -6,8 +6,13 @@ local roundSystemEventActions = require(roundSystemEvent.Actions)
 
 local _connections: { RBXScriptConnection } = {}
 
+local function spawnToothDecay()
+    -- get random tooth and spawn
+end
+
 local function startRound()
     -- spawn tooth decay to random tooths
+    spawnToothDecay()
     -- start thread for spawning tooth decay monsters
     -- start thread for spawning saliva
     -- start thread for spawning tartar mobs
