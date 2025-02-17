@@ -13,7 +13,7 @@ local function addTaskToTimer(taskName: string, _task: Types.TaskType)
     _tasks[taskName] = _task
 end
 
-local function remoteTaskFromTimer(taskName: string)
+local function removeTaskFromTimer(taskName: string)
     if _tasks[taskName] then
         _tasks[taskName] = nil
     end
@@ -22,7 +22,7 @@ end
 local function eventConnect(action: string, ...: any)
     local actions = {
         [eventActions.addTaskToTimer] = addTaskToTimer,
-        [eventActions.remoteTaskFromTimer] = remoteTaskFromTimer,
+        [eventActions.removeTaskFromTimer] = removeTaskFromTimer,
     }
 
     if actions[action] then

@@ -1,6 +1,6 @@
 local Actions = {
     addTaskToTimer = "addTaskToTimer",
-    remoteTaskFromTimer = "remoteTaskFromTimer",
+    removeTaskFromTimer = "removeTaskFromTimer",
 }
 
 return Actions
