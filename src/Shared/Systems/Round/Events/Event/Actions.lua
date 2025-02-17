@@ -6,6 +6,7 @@ local Actions = {
     ]]
     equipPlayer = "equipPlayer",
 
+    finishRound = "finishRound",
     startRound = "startRound",
 }
 

@@ -95,7 +95,6 @@ local function startRound()
     _connections["onCurrentWaveChanged"] = Variables.CurrentWave.Changed:Connect(onCurrentWaveChanged)
 end
 
-
 local function startGame(team: Types.TeamType)
     equipTeam(team)
     teleportPlayers(team)
