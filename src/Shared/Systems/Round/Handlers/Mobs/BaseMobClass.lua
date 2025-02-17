@@ -63,6 +63,11 @@ BaseMobClass.FindTarget = function(self: BaseMobClassType, enemyUnits: { Model }
     end
 end
 
+BaseMobClass.CanAct = function(self: BaseMobClassType)
+    local humanoid = self.model:FindFirstChildOfClass("Humanoid")
+    return (humanoid.Health > 0)
+end
+
 BaseMobClass.Attack = function(self: BaseMobClassType)
     local enemy = self.stats.Target.Value :: Model
     local function spellMagic()
@@ -101,7 +106,9 @@ BaseMobClass.Died = function(self: BaseMobClassType)
 end
 
 BaseMobClass.Act = function(self: BaseMobClassType)
-    
+    if not self:CanAct() then
+        return
+    end
 end
 
 export type BaseMobClassType = typeof(BaseMobClass.New())
