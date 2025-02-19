@@ -9,6 +9,8 @@ local Constants = {
     EFFECT_KEYS = {
         ""
     },
+
+    CAPSULE_TAG = "Capsule",
 }
 
 return Constants
