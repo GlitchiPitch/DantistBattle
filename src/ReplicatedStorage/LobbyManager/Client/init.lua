@@ -4,6 +4,10 @@ local Players = game:GetService("Players")
 
 local Constants = require(ReplicatedStorage.Constants)
 
+local LobbyManager = script.Parent
+local Assets = LobbyManager.Assets
+local UI = Assets.UI
+
 local player = Players.LocalPlayer
 local capsuleGui = player.PlayerGui:WaitForChild("CapsuleGui")
 
@@ -46,6 +50,10 @@ local function onCapsuleRemoved(capsule)
         _inspectPrompts[capsule].Hidden:Disconnect()
         _inspectPrompts[capsule] = nil
     end
+end
+
+local function setupGui()
+    
 end
 
 local function initialize()
