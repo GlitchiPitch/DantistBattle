@@ -2,48 +2,54 @@
   "ClassName": "ScreenGui",
   "Children": [
     {
-      "Name": "CapsuleFrame",
-      "ClassName": "Frame",
+      "ClassName": "Folder",
+      "Name": "Roles",
       "Children": [
         {
-          "Name": "UIAspectRatioConstraint",
-          "ClassName": "UIAspectRatioConstraint"
-        },
-        {
-          "Name": "UIListLayout",
-          "ClassName": "UIListLayout"
-        },
-        {
-          "Name": "Title",
+          "Name": "CapsuleFrameTemplate",
           "ClassName": "Frame",
           "Children": [
             {
-              "Name": "TextLabel",
-              "ClassName": "TextLabel",
-              "Children": [
-                {
-                  "Name": "UIStroke",
-                  "ClassName": "UIStroke"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "Name": "Button",
-          "ClassName": "Frame",
-          "Children": [
-            {
-              "Name": "TextButton",
-              "ClassName": "TextButton"
+              "Name": "UIAspectRatioConstraint",
+              "ClassName": "UIAspectRatioConstraint"
             },
             {
-              "Name": "TextLabel",
-              "ClassName": "TextLabel",
+              "Name": "UIListLayout",
+              "ClassName": "UIListLayout"
+            },
+            {
+              "Name": "Title",
+              "ClassName": "Frame",
               "Children": [
                 {
-                  "Name": "UIStroke",
-                  "ClassName": "UIStroke"
+                  "Name": "TextLabel",
+                  "ClassName": "TextLabel",
+                  "Children": [
+                    {
+                      "Name": "UIStroke",
+                      "ClassName": "UIStroke"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "Button",
+              "ClassName": "Frame",
+              "Children": [
+                {
+                  "Name": "TextButton",
+                  "ClassName": "TextButton"
+                },
+                {
+                  "Name": "TextLabel",
+                  "ClassName": "TextLabel",
+                  "Children": [
+                    {
+                      "Name": "UIStroke",
+                      "ClassName": "UIStroke"
+                    }
+                  ]
                 }
               ]
             }

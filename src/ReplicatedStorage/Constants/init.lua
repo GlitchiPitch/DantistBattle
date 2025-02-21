@@ -5,12 +5,13 @@ local Constants = {
     BOOST_KEYS = {
         ""
     },
-    
+
     EFFECT_KEYS = {
         ""
     },
 
     CAPSULE_TAG = "Capsule",
+    CAPSULE_ROLE_ATTRIBUTE = "Role",
 }
 
 return Constants
