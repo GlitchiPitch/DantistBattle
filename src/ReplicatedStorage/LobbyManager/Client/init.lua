@@ -14,14 +14,44 @@ local remoteActions = require(remote.Actions)
 
 local player = Players.LocalPlayer
 local capsuleGui = player.PlayerGui:WaitForChild("CapsuleGui")
+local waitingFrame = capsuleGui.WaitingFrame
+
 local capsuleFrameTemplate = capsuleGui.Roles.CapsuleFrameTemplate
 
 local _inspectPrompts: {
 	[Instance]: {
 		Shown: RBXScriptConnection,
 		Hidden: RBXScriptConnection,
+		IsOccupied: RBXScriptConnection,
 	},
 } = {}
+
+local _connections: { [string]: RBXScriptConnection } = {}
+local _connectionKeys: { string } = {}
+
+local function iterateCapculeInstances(callback: (capsule: Model) -> ())
+	for _, capsule in CollectionService:GetTagged(Constants.CAPSULE_TAG) do
+		callback(capsule)
+	end
+end
+
+--[[
+	спавнить для каждой капсулы в ваитинг фрейме иконку, в чек капсуле окупид атрибут и менял картинку
+	при ремуве роли снимать конекты и дропать интерфейс до дефолта
+
+]]
+
+local function checkCapsuleOccupied(capsule: Types.CapsuleType)
+	local function onCapsuleOccupied()
+		local isOccupied = capsule:GetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE) :: boolean
+		local capsuleCheckerFrame = capsule.Variables.CapsuleCheckerFrame.Value :: typeof(waitingFrame.CapsulesChecker.Template)
+		capsuleCheckerFrame:SetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE, isOccupied)
+	end
+
+
+
+	capsule:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(onCapsuleOccupied)
+end
 
 local function createCapsuleFrame(capsule: Model, capsuleRole: string): typeof(capsuleFrameTemplate)
 	local capsuleData = Configuration[capsuleRole]
@@ -30,6 +60,7 @@ local function createCapsuleFrame(capsule: Model, capsuleRole: string): typeof(c
 	local function onClick()
 		capsuleFrame.Button.TextButton.Interactable = false
 		remote:FireServer(remoteActions.getRole, capsule)
+		iterateCapculeInstances(checkCapsuleOccupied)
 		task.wait(1)
 		capsuleFrame.Button.TextButton.Interactable = true
 	end
@@ -53,6 +84,26 @@ local function CustomPrompt(capsule: Model, capsuleRole: string): (ProximityProm
 	return _prompt, _customPrompt
 end
 
+local function createCapsuleStatusFrame(capsule: Types.CapsuleType)
+	local capsuleChecker = waitingFrame.CapsulesChecker.Template:Clone()
+	local states = {
+		active = 0,
+		inactive = 0,
+	}
+	local function capsuleCheckerOccupiedChecked()
+		local isOccupied = capsuleChecker:GetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE) :: boolean
+		if isOccupied then
+			-- 
+		end
+	end
+
+	capsuleChecker:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(capsuleCheckerOccupiedChecked)
+
+	capsuleChecker.Visible = true
+	capsuleChecker.Parent = waitingFrame.CapsulesChecker
+	capsule.Variables.CapsuleCheckerFrame.Value = capsuleChecker
+end
+
 local function onCapsuleAdded(capsule: Model & { PrimartPart: Part & { PromptAttachment: Attachment } })
 	local promptAttachment = capsule.PrimartPart.PromptAttachment
 	local capsuleRole = capsule:GetAttribute(Constants.CAPSULE_ROLE_ATTRIBUTE) :: string
@@ -66,8 +117,9 @@ local function onCapsuleAdded(capsule: Model & { PrimartPart: Part & { PromptAtt
 		customPrompt.Visible = false
 	end
 
-	prompt.Parent = promptAttachment
+	createCapsuleStatusFrame(capsule)
 
+	prompt.Parent = promptAttachment
 	_inspectPrompts[capsule] = {
 		Shown = prompt.PromptShown:Connect(onPromptShown),
 		Hidden = prompt.PromptHidden:Connect(onPromptHidden),
@@ -82,25 +134,28 @@ local function onCapsuleRemoved(capsule)
 	end
 end
 
-local function getRole(state: boolean)
-	capsuleGui.WaitingFrame.Visible = state
-	if state then
-		
-	end
+local function getRole() -- capsule, true
+	capsuleGui.WaitingFrame.Visible = true
+
+end
+
+local function removeRole()
+	
 end
 
 local function remoteConnect(action: string, ...: any)
 	local actions = {
 		[remoteActions.getRole] = getRole,
-		[remoteActions.removeRole] = getRole,
+		[remoteActions.removeRole] = removeRole,
 	}
-	
+
+	if actions[action] then
+		actions[action](...)
+	end
 end
 
 local function initialize()
-	for _, capsule in CollectionService:GetTagged(Constants.CAPSULE_TAG) do
-		onCapsuleAdded(capsule)
-	end
+	iterateCapculeInstances(onCapsuleAdded)
 
 	CollectionService:GetInstanceAddedSignal(Constants.CAPSULE_TAG):Connect(onCapsuleAdded)
 	CollectionService:GetInstanceRemovedSignal(Constants.CAPSULE_TAG):Connect(onCapsuleRemoved)
@@ -108,6 +163,4 @@ local function initialize()
 	remote.OnClientEvent:Connect(remoteConnect)
 end
 
-return {
-	initialize = initialize,
-}
+return { initialize = initialize }

@@ -4,6 +4,10 @@ local Configuration = require(ReplicatedStorage.Configuration)
 local Constants = require(ReplicatedStorage.Constants)
 local Types = require(ReplicatedStorage.Types)
 
+local TeamSystem = ReplicatedStorage.Systems.Team
+local teamSystemEvent = TeamSystem.Events.Event
+local teamSystemEventActions = require(teamSystemEvent.Actions)
+
 local LobbyManager = script.Parent
 local Instances = require(LobbyManager.Instances)
 
@@ -12,6 +16,36 @@ local remoteActions = require(remote.Actions)
 
 local _inspectCapsules: { [Instance]: Player } = {}
 
+local function getOccupiedCapsules() : number
+    local i = 0
+    for _, _ in _inspectCapsules do i += 1 end
+    return i
+end
+
+local function prepareTeamForStart() : Types.TeamType
+    local team: Types.TeamType = {}
+    for capsule, playerInCapusle in _inspectCapsules do
+        local role = capsule:GetAttribute(Constants.CAPSULE_ROLE_ATTRIBUTE) :: string
+        team[role] = playerInCapusle
+    end
+
+    return team
+end
+
+local function start()
+    -- animate capsules
+    local team = prepareTeamForStart()
+
+end
+
+local function checkForStartGame()
+    if getOccupiedCapsules() == #Instances.Lobby.Capsules then
+        start()
+    else
+        print("asd")
+    end
+end
+
 local function removeRole(player: Player, capsule: Types.CapsuleType)
     if _inspectCapsules[capsule] then
         _inspectCapsules[capsule] = nil
@@ -19,24 +53,14 @@ local function removeRole(player: Player, capsule: Types.CapsuleType)
     end
 end
 
-local function getInspectCapsules() : number
-    local i = 0
-    for _, _ in _inspectCapsules do i += 1 end
-    return i
-end
-
 local function giveRole(player: Player, capsule: Types.CapsuleType)
     if not _inspectCapsules[capsule] then
         player.Character:PivotTo(capsule.Primary.CharacterAttachment.WorldCFrame)
         _inspectCapsules[capsule] = player
-        remote:FireClient(player, remoteActions.getRole, capsule, true)
+        capsule:SetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE, true)
+        remote:FireClient(player, remoteActions.getRole, capsule)
 
-        if getInspectCapsules() == #Instances.Lobby.Capsules then
-            -- start
-            print("start")
-        else
-            print("asd")
-        end
+        checkForStartGame()
     end
     -- setup player to capsule
     -- open waiting frame
@@ -57,6 +81,4 @@ local function initialize()
     remote.OnServerEvent:Connect(remoteConnect)
 end
 
-return {
-    initialize = initialize,
-}
+return { initialize = initialize }

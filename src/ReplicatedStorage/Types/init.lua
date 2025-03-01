@@ -12,6 +12,9 @@ export type TeamType = {
     Heavy: Player,
 }
 
-export type CapsuleType = Model & { Primary: Part & { PromptAttachment: Attachment, CharacterAttachment: Attachment } }
+export type CapsuleType = Model & {
+    Primary: Part & { PromptAttachment: Attachment, CharacterAttachment: Attachment },
+    Variables: Folder & { CapsuleCheckerFrame: ObjectValue },
+}
 
 return {}

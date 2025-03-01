@@ -12,6 +12,7 @@ local Constants = {
 
     CAPSULE_TAG = "Capsule",
     CAPSULE_ROLE_ATTRIBUTE = "Role",
+    OCCUPIED_CAPSULE_ATTRIBUTE = "IsOccupied",
 }
 
 return Constants

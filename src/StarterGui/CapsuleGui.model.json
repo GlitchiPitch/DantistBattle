@@ -70,7 +70,7 @@
           "ClassName": "UIListLayout"
         },
         {
-          "Name": "TeamChecker",
+          "Name": "CapsulesChecker",
           "ClassName": "Frame",
           "Children": [
             {
@@ -86,6 +86,20 @@
                   "ClassName": "ImageLabel"
                 }
               ]
+            }
+          ]
+        },
+        {
+          "Name": "Exit",
+          "ClassName": "Frame",
+          "Children": [
+            {
+              "Name": "TextButton",
+              "ClassName": "TextButton"
+            },
+            {
+              "Name": "TextLabel",
+              "ClassName": "TextLabel"
             }
           ]
         }
