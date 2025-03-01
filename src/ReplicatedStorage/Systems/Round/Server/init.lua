@@ -18,16 +18,10 @@ local QuestsHandler = require(Handlers.Quests)
 local event = Events.Event
 local eventActions = require(event.Actions)
 
-local remote = Events.Remote
-local remoteActions = require(remote.Actions)
+-- local remote = Events.Remote
+-- local remoteActions = require(remote.Actions)
 
 local _connections: { [string]: RBXScriptConnection } = {}
-
-local function equipTeam(team: Types.TeamType)
-    for role, player in team do
-        event:Fire(eventActions.equipPlayer, player, role)
-    end
-end
 
 local function teleportPlayers(team: Types.TeamType)
     for _, player in team do
@@ -96,7 +90,6 @@ local function startRound()
 end
 
 local function startGame(team: Types.TeamType)
-    equipTeam(team)
     teleportPlayers(team)
     startRound()
 end

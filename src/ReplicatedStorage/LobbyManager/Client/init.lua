@@ -13,6 +13,7 @@ local remote = LobbyManager.Events.Remote
 local remoteActions = require(remote.Actions)
 
 local player = Players.LocalPlayer
+local ControlModule = player.PlayerScripts:WaitForChild("ControlModule")
 local capsuleGui = player.PlayerGui:WaitForChild("CapsuleGui")
 -- local waitingFrame = capsuleGui.WaitingFrame
 
@@ -34,14 +35,6 @@ local function iterateCapculeInstances(callback: (capsule: Model) -> ())
 		callback(capsule)
 	end
 end
-
---[[
-	спавнить для каждой капсулы в ваитинг фрейме иконку, в чек капсуле окупид атрибут и менял картинку
-	
-
-]]
-
-
 
 local function createCapsuleFrame(capsule: Model, capsuleRole: string): typeof(capsuleFrameTemplate)
 	local capsuleData = Configuration[capsuleRole]
@@ -127,7 +120,6 @@ local function checkCapsuleOccupied(capsule: Types.CapsuleType)
 		local capsuleCheckerFrame = capsule.Variables.CapsuleCheckerFrame.Value :: typeof(capsuleGui.WaitingFrame.CapsulesChecker.Template)
 		capsuleCheckerFrame:SetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE, isOccupied)
 	end
-
 	_connections[capsule] = capsule:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(onCapsuleOccupied)
 end
 
@@ -139,11 +131,13 @@ local function clearConnectionsForCapsules(capsule: Types.CapsuleType)
 end
 
 local function getRole() -- capsule, true
+	ControlModule:Disable()
 	capsuleGui.WaitingFrame.Visible = true
 	iterateCapculeInstances(checkCapsuleOccupied)
 end
 
 local function removeRole()
+	ControlModule:Enable()
 	-- при ремуве роли снимать конекты и дропать интерфейс до дефолта
 	capsuleGui.WaitingFrame.Visible = false
 	iterateCapculeInstances(clearConnectionsForCapsules)

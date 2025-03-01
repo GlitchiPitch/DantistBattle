@@ -55,6 +55,7 @@ end
 local function removeRole(player: Player, capsule: Types.CapsuleType)
     if _inspectCapsules[capsule] then
         _inspectCapsules[capsule] = nil
+        player.Character:PivotTo(capsule.Primary.PromptAttachment.WorldCFrame)
         remote:FireClient(player, remoteActions.getRole, capsule, false)
     end
 end
@@ -68,8 +69,6 @@ local function giveRole(player: Player, capsule: Types.CapsuleType)
 
         checkForStartGame()
     end
-    -- setup player to capsule
-    -- open waiting frame
 end
 
 local function remoteConnect(player: Player, action: string, ...: any)

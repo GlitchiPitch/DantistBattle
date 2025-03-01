@@ -14,12 +14,36 @@ local eventActions = require(event.Actions)
 
 local _connections: { RBXScriptConnection } = {}
 
---[[
-    функция что будет получать всех уже готовых игроков
-    и сделать отдельную функцию которая будет собирать к примеру по кнопкам, или плитам игроков и потом отправлять в функцию выше
-]]
+local Guns = {
+    Heavy = Instance.new("Tool"),
+}
+
+local Armors = {
+    Heavy = Instance.new("HumanoidDescription"),
+}
+
+local function giveGuns(player: Player, role: string)
+    local gun = Guns[role]
+    assert(gun, `armor {role} is not found`)
+    gun.Parent = player.Backpack
+end
+
+local function giveArmor(player: Player, role: string)
+    local armor = Armors[role]
+    local humanoid = player.Character:FindFirstAncestorOfClass("Humanoid")
+    assert(armor, `armor {role} is not found`)
+    humanoid:ApplyDescription(armor)
+end
+
+local function equipTeam(team: Types.TeamType)
+    for role, player in team do
+        giveArmor(player, role)
+        giveGuns(player, role)
+    end
+end
 
 local function teamReady(team: Types.TeamType)
+    equipTeam(team)
     roundSystemEvent:Fire(roundSystemEventActions.startGame, team)
 end
 
