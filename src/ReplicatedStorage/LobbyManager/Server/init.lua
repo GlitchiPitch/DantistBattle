@@ -22,6 +22,10 @@ local function getOccupiedCapsules() : number
     return i
 end
 
+local function clearCapsules()
+    _inspectCapsules = {}
+end
+
 local function prepareTeamForStart() : Types.TeamType
     local team: Types.TeamType = {}
     for capsule, playerInCapusle in _inspectCapsules do
@@ -35,14 +39,16 @@ end
 local function start()
     -- animate capsules
     local team = prepareTeamForStart()
+    teamSystemEvent:Fire(teamSystemEventActions.teamReady, team)
 
+    clearCapsules()
 end
 
 local function checkForStartGame()
     if getOccupiedCapsules() == #Instances.Lobby.Capsules then
         start()
-    else
-        print("asd")
+    -- else
+    --     print("asd")
     end
 end
 

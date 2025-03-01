@@ -7,14 +7,14 @@ local Constants = require(ReplicatedStorage.Constants)
 local Configuration = require(ReplicatedStorage.Configuration)
 
 local LobbyManager = script.Parent
-local Instances = require(LobbyManager.Instances)
+-- local Instances = require(LobbyManager.Instances)
 
 local remote = LobbyManager.Events.Remote
 local remoteActions = require(remote.Actions)
 
 local player = Players.LocalPlayer
 local capsuleGui = player.PlayerGui:WaitForChild("CapsuleGui")
-local waitingFrame = capsuleGui.WaitingFrame
+-- local waitingFrame = capsuleGui.WaitingFrame
 
 local capsuleFrameTemplate = capsuleGui.Roles.CapsuleFrameTemplate
 
@@ -26,7 +26,7 @@ local _inspectPrompts: {
 	},
 } = {}
 
-local _connections: { [string]: RBXScriptConnection } = {}
+local _connections: { [any]: RBXScriptConnection } = {}
 local _connectionKeys: { string } = {}
 
 local function iterateCapculeInstances(callback: (capsule: Model) -> ())
@@ -37,21 +37,11 @@ end
 
 --[[
 	спавнить для каждой капсулы в ваитинг фрейме иконку, в чек капсуле окупид атрибут и менял картинку
-	при ремуве роли снимать конекты и дропать интерфейс до дефолта
+	
 
 ]]
 
-local function checkCapsuleOccupied(capsule: Types.CapsuleType)
-	local function onCapsuleOccupied()
-		local isOccupied = capsule:GetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE) :: boolean
-		local capsuleCheckerFrame = capsule.Variables.CapsuleCheckerFrame.Value :: typeof(waitingFrame.CapsulesChecker.Template)
-		capsuleCheckerFrame:SetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE, isOccupied)
-	end
 
-
-
-	capsule:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(onCapsuleOccupied)
-end
 
 local function createCapsuleFrame(capsule: Model, capsuleRole: string): typeof(capsuleFrameTemplate)
 	local capsuleData = Configuration[capsuleRole]
@@ -60,7 +50,6 @@ local function createCapsuleFrame(capsule: Model, capsuleRole: string): typeof(c
 	local function onClick()
 		capsuleFrame.Button.TextButton.Interactable = false
 		remote:FireServer(remoteActions.getRole, capsule)
-		iterateCapculeInstances(checkCapsuleOccupied)
 		task.wait(1)
 		capsuleFrame.Button.TextButton.Interactable = true
 	end
@@ -85,22 +74,20 @@ local function CustomPrompt(capsule: Model, capsuleRole: string): (ProximityProm
 end
 
 local function createCapsuleStatusFrame(capsule: Types.CapsuleType)
-	local capsuleChecker = waitingFrame.CapsulesChecker.Template:Clone()
+	local capsuleChecker = capsuleGui.WaitingFrame.CapsulesChecker.Template:Clone()
 	local states = {
 		active = 0,
 		inactive = 0,
 	}
 	local function capsuleCheckerOccupiedChecked()
 		local isOccupied = capsuleChecker:GetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE) :: boolean
-		if isOccupied then
-			-- 
-		end
+		capsuleChecker.ImageLabel.Image = "rbxassets://" .. isOccupied and states.active or states.inactive
 	end
 
 	capsuleChecker:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(capsuleCheckerOccupiedChecked)
 
 	capsuleChecker.Visible = true
-	capsuleChecker.Parent = waitingFrame.CapsulesChecker
+	capsuleChecker.Parent = capsuleGui.WaitingFrame.CapsulesChecker
 	capsule.Variables.CapsuleCheckerFrame.Value = capsuleChecker
 end
 
@@ -134,13 +121,32 @@ local function onCapsuleRemoved(capsule)
 	end
 end
 
+local function checkCapsuleOccupied(capsule: Types.CapsuleType)
+	local function onCapsuleOccupied()
+		local isOccupied = capsule:GetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE) :: boolean
+		local capsuleCheckerFrame = capsule.Variables.CapsuleCheckerFrame.Value :: typeof(capsuleGui.WaitingFrame.CapsulesChecker.Template)
+		capsuleCheckerFrame:SetAttribute(Constants.OCCUPIED_CAPSULE_ATTRIBUTE, isOccupied)
+	end
+
+	_connections[capsule] = capsule:GetAttributeChangedSignal(Constants.OCCUPIED_CAPSULE_ATTRIBUTE):Connect(onCapsuleOccupied)
+end
+
+local function clearConnectionsForCapsules(capsule: Types.CapsuleType)
+	if _connections[capsule] then
+		_connections[capsule]:Disconnect()
+		_connections[capsule] = nil
+	end
+end
+
 local function getRole() -- capsule, true
 	capsuleGui.WaitingFrame.Visible = true
-
+	iterateCapculeInstances(checkCapsuleOccupied)
 end
 
 local function removeRole()
-	
+	-- при ремуве роли снимать конекты и дропать интерфейс до дефолта
+	capsuleGui.WaitingFrame.Visible = false
+	iterateCapculeInstances(clearConnectionsForCapsules)
 end
 
 local function remoteConnect(action: string, ...: any)
@@ -160,6 +166,11 @@ local function initialize()
 	CollectionService:GetInstanceAddedSignal(Constants.CAPSULE_TAG):Connect(onCapsuleAdded)
 	CollectionService:GetInstanceRemovedSignal(Constants.CAPSULE_TAG):Connect(onCapsuleRemoved)
 
+	local function onExitClick()
+		remote:FireServer(remoteActions.removeRole)
+	end
+
+	capsuleGui.WaitingFrame.Exit.TextButton.MouseButton1Click:Connect(onExitClick)
 	remote.OnClientEvent:Connect(remoteConnect)
 end
 
