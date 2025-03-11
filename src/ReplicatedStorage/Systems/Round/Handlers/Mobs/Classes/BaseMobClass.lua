@@ -6,39 +6,52 @@ local Utility = ReplicatedStorage.Utility
 local Constants = require(ReplicatedStorage.Constants)
 local getMagnitude = require(Utility.getMagnitude)
 
+local MobsHandler = script.Parent.Parent
+local Types = require(MobsHandler.Types)
+
 local BaseMobClass = {}
 BaseMobClass.__index = BaseMobClass
 
+type AnimationListType = {
+    attack: number | AnimationTrack,
+    die: number | AnimationTrack,
+}
 
-function BaseMobClass.New(name: string, model: Model, hp: number)
-    local self = {}
-    self.model = model
-    self.hp = hp
+type ConfigurationType = {
+    evadeChance: number?,
+    attackDistance: number?,
+}
 
-    self.name = name
-    self.stats = Instance.new("Folder") :: Folder & { Target: ObjectValue }
-    self.configuration = {
-        targetDistance = 0,
-        spellDistance = 0,
-        evadeChance = 0,
-        magicInstance = 0,
-        magicSpeed = 0,
+
+
+function BaseMobClass.New(mobData: Types.MobData)
+    local self = {
+        -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов чтобы было легче респавнить
+        model = mobData.model,
+        hp = mobData.hp,
+        -- TODO: возможно поместить в таблицу
+        stats = nil :: Folder & { Target: ObjectValue },
+        configuration = {
+            attackDistance = 0,
+            spellDistance = 0,
+            evadeChance = 0,
+        } :: ConfigurationType,
+        animations = {
+            attack = 0,
+            die = 0,
+        } :: AnimationListType,
+        boosts = {} :: { [string]: number },
+        effects = {} :: { [string]: number },
     }
-    self.animations = {
-        attack = 0,
-        die = 0,
-    } :: { 
-        attack: number | AnimationTrack,
-        die: number | AnimationTrack,
-    }
-    self.boosts = {} :: { [string]: number }
-    self.effects = {} :: { [string]: number }
-
     return setmetatable(self, BaseMobClass)
 end
 
-BaseMobClass.Initialize = function(self: BaseMobClassType)
+BaseMobClass.Initialize = function(self: BaseMobClassType, spawnPosition: Part)
     self:LoadAnimation()
+    self.model = self.model:Clone()
+    self.model.Parent = spawnPosition
+    -- TODO: так как далее размеры у мобов будут разные вытаскивать хуманоида и после hipHeight 
+    self.model:PivotTo(spawnPosition.CFrame * CFrame.new(0, 5, 0))
 end
 
 
@@ -68,24 +81,25 @@ BaseMobClass.CanAct = function(self: BaseMobClassType)
     return (humanoid.Health > 0)
 end
 
-BaseMobClass.Attack = function(self: BaseMobClassType)
+BaseMobClass.Attack = function(self: BaseMobClassType, callback: () -> ())
     local enemy = self.stats.Target.Value :: Model
-    local function spellMagic()
+    local function _attack()
         self.animations.attack:Play()
         -- task.wait(self.animations.attack.Length)
-        local magicInstance = self.configuration.magicInstance:Clone()
-        local distance = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
-        local tweenTime = distance / self.configuration.magicSpeed
-        local tweenInfo = TweenInfo.new(tweenTime)
-        magicInstance.Parent = self.model
-        local tween = TweenService:Create(magicInstance, tweenInfo, {CFrame = enemy:GetPivot()})
-        tween:Play()
-        
+        -- local magicInstance = self.configuration.magicInstance:Clone()
+        -- local distance = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
+        -- local tweenTime = distance / self.configuration.magicSpeed
+        -- local tweenInfo = TweenInfo.new(tweenTime)
+        -- magicInstance.Parent = self.model
+        -- local tween = TweenService:Create(magicInstance, tweenInfo, {CFrame = enemy:GetPivot()})
+        -- tween:Play()
+        callback()
     end
 
     if enemy then
-        if self.configuration.spellDistance < getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position) then
-            spellMagic()
+        local targetMagnitude = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
+        if targetMagnitude < self.configuration.attackDistance then
+            _attack()
         end
     end
 
@@ -103,12 +117,15 @@ BaseMobClass.LoadAnimation = function(self: BaseMobClassType)
 end
 
 BaseMobClass.Died = function(self: BaseMobClassType)
+    -- maybe make revive ability for died units like a shaman
 end
 
-BaseMobClass.Act = function(self: BaseMobClassType)
+BaseMobClass.Act = function(self: BaseMobClassType, callback: () -> ())
     if not self:CanAct() then
         return
     end
+
+    callback()
 end
 
 export type BaseMobClassType = typeof(BaseMobClass.New())

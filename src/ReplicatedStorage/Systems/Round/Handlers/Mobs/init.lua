@@ -1,6 +1,7 @@
 local Handlers = script.Parent
 local RoundSystem = Handlers.Parent
 
+local Variables = RoundSystem.Variables
 local Instances = require(RoundSystem.Instances)
 
 local event = RoundSystem.Events.Event
@@ -10,12 +11,27 @@ local Classes = script.Classes
 local TartarClass = require(Classes.TartarClass)
 local ToothDecayMonster = require(Classes.ToothDecayMonster)
 
+local Mobas = {
+    [1] = ToothDecayMonster,
+    [2] = TartarClass, -- Tartar
+}
+
+local MOB_COUNT = 10
+
 local function clearMobs()
     
+
 end
 
 local function spawnMobs()
-    
+    local currentMob = Mobas[Variables.CurrentWave.Value]
+    local _mobSpawners = Instances.Map.MobSpawners:GetChildren()
+    -- TODO: at the future add difficult
+    for i = 1, MOB_COUNT do
+        local _mob = currentMob.new()
+        local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
+        _mob:initialize()
+    end
 end
 
 local function startRound()
@@ -36,9 +52,5 @@ local function initialize()
     event.Event:Connect(eventConnect)
 end
 
-local Mobas = {
-    Tartar = TartarClass,
-    ToothDecayMonster = ToothDecayMonster,
-}
 
 return { initialize = initialize }
