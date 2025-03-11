@@ -12,8 +12,10 @@ local Events = RoundSystem.Events
 local Handlers = RoundSystem.Handlers
 local Variables = RoundSystem.Variables
 
+local Instances = require(RoundSystem.Instances)
 local PlayerHandler = require(Handlers.Player)
 local QuestsHandler = require(Handlers.Quests)
+local MobHandler = require(Handlers.Mobs)
 
 local event = Events.Event
 local eventActions = require(event.Actions)
@@ -24,9 +26,10 @@ local eventActions = require(event.Actions)
 local _connections: { [string]: RBXScriptConnection } = {}
 
 local function teleportPlayers(team: Types.TeamType)
+    local spawner = Instances.Map.Spawner
     for _, player in team do
         if player.Character then
-            player.Character:PivotTo()
+            player.Character:PivotTo(spawner.CFrame * CFrame.new(0, 5, 0))
         end
     end
 end
@@ -82,7 +85,7 @@ local function startRound()
 
     Variables.RoundTimer.Value = Constants.ROUND_TIME
     Variables.CurrentWave.Value = 1
-    -- for quests handler
+    -- for quests handler & mobs handler
     event:Fire(eventActions.startRound)
     globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "ROUND", roundTask)
 
@@ -107,6 +110,7 @@ end
 local function initialize()
     QuestsHandler.initialize()
     PlayerHandler.initialize()
+    MobHandler.initialize()
 
     _connections["eventConnect"] = event.Event:Connect(eventConnect) 
 end
