@@ -20,7 +20,6 @@ local MOB_COUNT = 10
 
 local function clearMobs()
     
-
 end
 
 local function spawnMobs()
@@ -30,12 +29,12 @@ local function spawnMobs()
     for i = 1, MOB_COUNT do
         local _mob = currentMob.new()
         local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
-        _mob:initialize()
+        _mob:Initialize(_mobSpawners)
     end
 end
 
 local function startRound()
-    
+    spawnMobs()
 end
 
 local function eventConnect(action: string, ...: any)

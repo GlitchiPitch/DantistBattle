@@ -1,5 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+
+local GlobalTypes = require(ReplicatedStorage.Types)
+
+local GlobalTimer = ReplicatedStorage.GlobalTimer
+local globalTimerEvent = GlobalTimer.Events.Event
+local globalTimerEventActions = require(globalTimerEvent.Actions)
 
 local Utility = ReplicatedStorage.Utility
 
@@ -21,8 +26,6 @@ type ConfigurationType = {
     evadeChance: number?,
     attackDistance: number?,
 }
-
-
 
 function BaseMobClass.New(mobData: Types.MobData)
     local self = {
@@ -52,17 +55,18 @@ BaseMobClass.Initialize = function(self: BaseMobClassType, spawnPosition: Part)
     self.model.Parent = spawnPosition
     -- TODO: так как далее размеры у мобов будут разные вытаскивать хуманоида и после hipHeight 
     self.model:PivotTo(spawnPosition.CFrame * CFrame.new(0, 5, 0))
-end
 
+    -- start thread
 
-BaseMobClass.CheckValidAct = function(self: BaseMobClassType)
-    for _, effect in Constants.EFFECT_KEYS do
-        if self.effects[effect] then
-            return false
-        end
+    local function mobAction()
+        self:Act()
     end
 
-    return true
+    local mobTask: GlobalTypes.TaskType = {
+        Action = mobAction,
+    }
+
+    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "", mobTask)
 end
 
 BaseMobClass.FindTarget = function(self: BaseMobClassType, enemyUnits: { Model }) -- or { classes }
@@ -76,9 +80,20 @@ BaseMobClass.FindTarget = function(self: BaseMobClassType, enemyUnits: { Model }
     end
 end
 
-BaseMobClass.CanAct = function(self: BaseMobClassType)
+BaseMobClass.CheckAlive = function(self: BaseMobClassType)
     local humanoid = self.model:FindFirstChildOfClass("Humanoid")
     return (humanoid.Health > 0)
+end
+
+BaseMobClass.CanAct = function(self: BaseMobClassType)
+
+    for _, effect in Constants.EFFECT_KEYS do
+        if self.effects[effect] then
+            return false
+        end
+    end
+
+    return true
 end
 
 BaseMobClass.Attack = function(self: BaseMobClassType, callback: () -> ())
@@ -118,10 +133,16 @@ end
 
 BaseMobClass.Died = function(self: BaseMobClassType)
     -- maybe make revive ability for died units like a shaman
+    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, "")
 end
 
 BaseMobClass.Act = function(self: BaseMobClassType, callback: () -> ())
     if not self:CanAct() then
+        return
+    end
+
+    if not self:CheckAlive() then
+        self:Died()
         return
     end
 

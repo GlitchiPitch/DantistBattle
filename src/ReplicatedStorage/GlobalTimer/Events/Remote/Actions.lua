@@ -1,3 +1,0 @@
-local Actions = {}
-
-return Actions
