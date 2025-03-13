@@ -1,127 +1,66 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GlobalTypes = require(ReplicatedStorage.Types)
+local Constants = require(ReplicatedStorage.Constants)
 
 local GlobalTimer = ReplicatedStorage.GlobalTimer
 local globalTimerEvent = GlobalTimer.Events.Event
 local globalTimerEventActions = require(globalTimerEvent.Actions)
 
-local Utility = ReplicatedStorage.Utility
-
-local Constants = require(ReplicatedStorage.Constants)
-local getMagnitude = require(Utility.getMagnitude)
-
 local MobsHandler = script.Parent.Parent
 local Types = require(MobsHandler.Types)
 
-local BaseMobClass = {}
-BaseMobClass.__index = BaseMobClass
+local BaseMob = {}
+BaseMob.__index = BaseMob
 
-type AnimationListType = {
-    attack: number | AnimationTrack,
-    die: number | AnimationTrack,
-}
-
-type ConfigurationType = {
-    evadeChance: number?,
-    attackDistance: number?,
-}
-
-function BaseMobClass.New(mobData: Types.MobData)
+function BaseMob.new(mobData: Types.MobData)
     local self = {
         -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов чтобы было легче респавнить
         model = mobData.model,
         hp = mobData.hp,
         -- TODO: возможно поместить в таблицу
-        stats = nil :: Folder & { Target: ObjectValue },
-        configuration = {
-            attackDistance = 0,
-            spellDistance = 0,
-            evadeChance = 0,
-        } :: ConfigurationType,
-        animations = {
-            attack = 0,
-            die = 0,
-        } :: AnimationListType,
-        boosts = {} :: { [string]: number },
-        effects = {} :: { [string]: number },
+        configuration = mobData.configuration,
+        animations = mobData.animations,
+        cache = {
+            targets = {} :: { {} }, -- { classes }
+            boosts = {} :: { [string]: number },
+            effects = {} :: { [string]: number },
+        },
     }
-    return setmetatable(self, BaseMobClass)
+
+	return setmetatable(self, BaseMob)
 end
 
-BaseMobClass.Initialize = function(self: BaseMobClassType, spawnPosition: Part)
+BaseMob.Initialize = function(self, spawnPoint: Part)
     self:LoadAnimation()
     self.model = self.model:Clone()
-    self.model.Parent = spawnPosition
+    self.model.Parent = spawnPoint
     -- TODO: так как далее размеры у мобов будут разные вытаскивать хуманоида и после hipHeight 
-    self.model:PivotTo(spawnPosition.CFrame * CFrame.new(0, 5, 0))
+    self.model:PivotTo(spawnPoint.CFrame * CFrame.new(0, 5, 0))
 
-    -- start thread
+    local function _mobAction()
+        self:UpdateCache()
+        
+        if not self:CanAct() then
+            return
+        end
+    
+        if not self:CheckAlive() then
+            self:Died()
+            return
+        end
 
-    local function mobAction()
         self:Act()
     end
 
     local mobTask: GlobalTypes.TaskType = {
-        Action = mobAction,
+        Action = _mobAction,
     }
 
     globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "", mobTask)
 end
 
-BaseMobClass.FindTarget = function(self: BaseMobClassType, enemyUnits: { Model }) -- or { classes }
-    if not self.stats.Target.Value then
-        for _, enemy in enemyUnits do
-            if self.configuration.targetDistance < getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position) then
-                self.stats.Target.Value = enemy
-                break
-            end
-        end
-    end
-end
-
-BaseMobClass.CheckAlive = function(self: BaseMobClassType)
-    local humanoid = self.model:FindFirstChildOfClass("Humanoid")
-    return (humanoid.Health > 0)
-end
-
-BaseMobClass.CanAct = function(self: BaseMobClassType)
-
-    for _, effect in Constants.EFFECT_KEYS do
-        if self.effects[effect] then
-            return false
-        end
-    end
-
-    return true
-end
-
-BaseMobClass.Attack = function(self: BaseMobClassType, callback: () -> ())
-    local enemy = self.stats.Target.Value :: Model
-    local function _attack()
-        self.animations.attack:Play()
-        -- task.wait(self.animations.attack.Length)
-        -- local magicInstance = self.configuration.magicInstance:Clone()
-        -- local distance = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
-        -- local tweenTime = distance / self.configuration.magicSpeed
-        -- local tweenInfo = TweenInfo.new(tweenTime)
-        -- magicInstance.Parent = self.model
-        -- local tween = TweenService:Create(magicInstance, tweenInfo, {CFrame = enemy:GetPivot()})
-        -- tween:Play()
-        callback()
-    end
-
-    if enemy then
-        local targetMagnitude = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
-        if targetMagnitude < self.configuration.attackDistance then
-            _attack()
-        end
-    end
-
-    print(self.name, "Attack")
-end
-
-BaseMobClass.LoadAnimation = function(self: BaseMobClassType)
+BaseMob.LoadAnimation = function(self)
     local humanoid = self.model.Humanoid
     local animator = humanoid:FindFirstChildOfClass("Animator")
     for animName, animationId in self.animations do
@@ -131,24 +70,49 @@ BaseMobClass.LoadAnimation = function(self: BaseMobClassType)
     end
 end
 
-BaseMobClass.Died = function(self: BaseMobClassType)
-    -- maybe make revive ability for died units like a shaman
-    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, "")
+-- BaseMob.bibi = function(self)
+-- 	print("Parent's bibi() method called")
+-- 	self:bebe()  -- Calls bebe() (will use Child's version if overridden)
+-- end
+
+-- BaseMob.bebe = function()
+-- 	print("Parent's bebe() method called")
+-- end
+
+
+BaseMob.CheckAlive = function(self)
+    local humanoid = self.model:FindFirstChildOfClass("Humanoid")
+    return (humanoid.Health > 0)
 end
 
-BaseMobClass.Act = function(self: BaseMobClassType, callback: () -> ())
-    if not self:CanAct() then
-        return
+-- check what effects that block action player has
+BaseMob.CanAct = function(self) : boolean
+
+    for _, effect in Constants.EFFECT_KEYS do
+        if self.cache.effects[effect] then
+            return false
+        end
     end
 
-    if not self:CheckAlive() then
-        self:Died()
-        return
-    end
-
-    callback()
+    return true
 end
 
-export type BaseMobClassType = typeof(BaseMobClass.New())
+BaseMob.Act = function(self)
+    -- implement this method from child classes
+end
 
-return BaseMobClass
+-- check temporary items from cache like a boost or effects
+BaseMob.UpdateCache = function(self)
+    -- or make itearate only effects and boosts not targets
+    for cacheItemName, _cache in self.cache do
+        for _cacheItemName, v in _cache do
+            if v > 0 then
+                self.cache[cacheItemName][_cacheItemName] -= 1
+            elseif v == 0 then
+                self.cache[cacheItemName][_cacheItemName] = nil
+            end
+        end
+    end
+end
+
+return BaseMob

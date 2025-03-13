@@ -1,5 +1,12 @@
 
-type ConfigurationType = {
+type AnimationType = number | AnimationTrack
+export type AnimationListType = { [string]: AnimationType } & {
+    attack: AnimationType,
+    die: AnimationType,
+    move: AnimationType,
+}
+
+export type ConfigurationType = {
     evadeChance: number?,
     attackDistance: number?,
     damage: number?,
@@ -8,8 +15,9 @@ type ConfigurationType = {
 export type MobData = {
     model: Model,
     hp: number,
-
+    animations: AnimationListType,
     configuration: ConfigurationType,
+    boosts: { [string]: number },
 }
 
 return {}
