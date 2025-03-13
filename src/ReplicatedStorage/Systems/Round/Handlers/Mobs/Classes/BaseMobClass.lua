@@ -33,7 +33,7 @@ export type BaseMobType = {
     UpdateCache: () -> (),
 }
 
-function BaseMob.new(mobData: Types.MobData)
+function BaseMob.new(mobData: Types.MobData) : BaseMobType
     local self = {
         -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов чтобы было легче респавнить
         model = mobData.model,

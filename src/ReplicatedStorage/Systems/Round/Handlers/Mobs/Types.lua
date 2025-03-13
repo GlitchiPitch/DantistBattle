@@ -9,6 +9,7 @@ export type AnimationListType = { [string]: AnimationType } & {
 export type ConfigurationType = {
     evadeChance: number?,
     attackDistance: number?,
+    targetDistance: number?,
     damage: number?,
 }
 

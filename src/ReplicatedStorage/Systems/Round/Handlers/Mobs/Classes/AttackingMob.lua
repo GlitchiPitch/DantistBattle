@@ -10,21 +10,34 @@ local BaseMob = require(Mobs.BaseMobClass)
 local AttackingMob = setmetatable({}, { __index = BaseMob })
 AttackingMob.__index = AttackingMob
 
-function AttackingMob.New(mobData: Types.MobData)
+export type AttackingMobType = BaseMob.BaseMobType & {
+    FindTarget: (enemyUnits: { Model }) -> (),
+    Attack: () -> (),
+}
+
+function AttackingMob.New(mobData: Types.MobData) : AttackingMobType
     return setmetatable(BaseMob.new(mobData), AttackingMob)
 end
 
-AttackingMob.FindTarget = function(self, enemyUnits: { Model }) -- or { classes }
+-- at the future make a multi target feature
+AttackingMob.FindTarget = function(self: AttackingMobType, enemyUnits: { Model }) -- or { classes }
     for _, enemy in enemyUnits do
         if self.configuration.targetDistance < getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position) then
-            self.stats.Target.Value = enemy
+            table.insert(self.cache.targets, enemy)
             break
         end
     end
 end
 
-AttackingMob.Attack = function(self)
-    local enemy = self.stats.Target.Value :: Model
+AttackingMob.Attack = function(self: AttackingMobType)
+    local enemy = self.cache.targets[1] :: BaseMob.BaseMobType
+
+    local function _doDamage()
+        local humanoid = enemy.model:FindFirstChildOfClass("Humanoid")
+        enemy.hp -= self.configuration.damage
+        humanoid.Health = enemy.hp
+    end
+
     local function _attack()
         self.animations.attack:Play()
         -- task.wait(self.animations.attack.Length)
@@ -35,12 +48,15 @@ AttackingMob.Attack = function(self)
         -- magicInstance.Parent = self.model
         -- local tween = TweenService:Create(magicInstance, tweenInfo, {CFrame = enemy:GetPivot()})
         -- tween:Play()
+        _doDamage()
     end
 
     if enemy then
-        local targetMagnitude = getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position)
+        local targetMagnitude = getMagnitude(enemy.model:GetPivot().Position, self.model:GetPivot().Position)
         if targetMagnitude < self.configuration.attackDistance then
             _attack()
+        else
+            self:Move()
         end
     end
 
