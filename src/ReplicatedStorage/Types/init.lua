@@ -17,4 +17,19 @@ export type CapsuleType = Model & {
     Variables: Folder & { CapsuleCheckerFrame: ObjectValue },
 }
 
+export type MapType = Folder & {
+	Interact: Folder & {
+        -- players spawn
+		SpawnLocations: Folder & { Part },
+
+		MobSpawners: Folder & { Part },
+		Mobs: Folder & {
+			Tartar: Folder & { Model },
+			ToothDecay: Folder & { Model },
+		},
+		Tooths: Folder & { Part },
+		Saliva: Part,
+	},
+}
+
 return {}

@@ -26,16 +26,16 @@ local eventActions = require(event.Actions)
 local _connections: { [string]: RBXScriptConnection } = {}
 
 local function teleportPlayers(team: Types.TeamType)
-    local spawner = Instances.Map.Spawner
-    for _, player in team do
-        if player.Character then
-            player.Character:PivotTo(spawner.CFrame * CFrame.new(0, 5, 0))
-        end
-    end
+	local spawner = Instances.Map.Interact.SpawnLocations:GetChildren()[1] :: Part
+	for _, player in team do
+		if player.Character then
+			player.Character:PivotTo(spawner.CFrame * CFrame.new(0, 5, 0))
+		end
+	end
 end
 
 local function increaseWave()
-    -- change tooth decay to pulpitus
+	-- change tooth decay to pulpitus
 end
 
 --[[
@@ -47,74 +47,70 @@ end
 ]]
 
 local function reset()
-    _connections["onCurrentWaveChanged"]:Disconnect()
-    Variables.RoundTimer.Value = 0
-    Variables.CurrentWave.Value = 0
+	_connections["onCurrentWaveChanged"]:Disconnect()
+	Variables.RoundTimer.Value = 0
+	Variables.CurrentWave.Value = 0
 end
 
 local function finishRound()
-    --[[
+	--[[
         if wave is game over player have decrease money
         every wave increase money to specific value
     ]]
-    -- check healthy tooths
-    reset()
+	-- check healthy tooths
+	reset()
 end
 
 local function updateRound()
-    Variables.RoundTimer.Value -= 1
-    if Variables.RoundTimer.Value <= 0 then
-        print("game over")
-        finishRound()
-    elseif Variables.RoundTimer.Value % Constants.SUBROUND_TIME == 0 then
-        Variables.CurrentWave.Value += 1
-    end
+	Variables.RoundTimer.Value -= 1
+	if Variables.RoundTimer.Value <= 0 then
+		print("game over")
+		finishRound()
+	elseif Variables.RoundTimer.Value % Constants.SUBROUND_TIME == 0 then
+		Variables.CurrentWave.Value += 1
+	end
 end
 
 local function startRound()
-    local roundTask: Types.TaskType = {
-        DeltaTime = 0,
-        Interval = 1,
-        Duration = Constants.ROUND_TIME,
-        Action = updateRound,
-    }
+	local roundTask: Types.TaskType = {
+		DeltaTime = 0,
+		Interval = 1,
+		Duration = Constants.ROUND_TIME,
+		Action = updateRound,
+	}
 
-    local function onCurrentWaveChanged(value: number)
-        
-    end
+	local function onCurrentWaveChanged(value: number) end
 
-    Variables.RoundTimer.Value = Constants.ROUND_TIME
-    Variables.CurrentWave.Value = 1
-    -- for quests handler & mobs handler
-    event:Fire(eventActions.startRound)
-    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "ROUND", roundTask)
+	Variables.RoundTimer.Value = Constants.ROUND_TIME
+	Variables.CurrentWave.Value = 1
+	-- for quests handler & mobs handler
+	event:Fire(eventActions.startRound)
+	globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "ROUND", roundTask)
 
-    _connections["onCurrentWaveChanged"] = Variables.CurrentWave.Changed:Connect(onCurrentWaveChanged)
+	_connections["onCurrentWaveChanged"] = Variables.CurrentWave.Changed:Connect(onCurrentWaveChanged)
 end
 
 local function startGame(team: Types.TeamType)
-    teleportPlayers(team)
-    startRound()
+	teleportPlayers(team)
+	startRound()
 end
 
 local function eventConnect(action: string, ...: any)
-    local actions = {
-        [eventActions.startGame] = startGame,
-    }
+	local actions = {
+		[eventActions.startGame] = startGame,
+	}
 
-    if actions[action] then
-        actions[action](...)
-    end
+	if actions[action] then
+		actions[action](...)
+	end
 end
 
 local function initialize()
-    QuestsHandler.initialize()
-    PlayerHandler.initialize()
-    MobHandler.initialize()
+	QuestsHandler.initialize()
+	PlayerHandler.initialize()
+	MobHandler.initialize()
 
-    _connections["eventConnect"] = event.Event:Connect(eventConnect) 
+	_connections["eventConnect"] = event.Event:Connect(eventConnect)
 end
 
-return {
-    initialize = initialize,
-}
+return { initialize = initialize }

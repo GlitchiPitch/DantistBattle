@@ -24,7 +24,7 @@ local Handlers = QuestsHandler.Parent
 local RoundSystem = Handlers.Parent
 local RoundSystemVariables = RoundSystem.Variables
 
-local MobsHandler = require(Handlers.Mobs)
+-- local MobsHandler = require(Handlers.Mobs)
 
 local roundSystemEvent = RoundSystem.Events.Event
 local roundSystemEventActions = require(roundSystemEvent.Actions)
@@ -35,56 +35,8 @@ local _connectionKeys = {
     roundSystemEventConnect = "roundSystemEventConnect",
 }
 local _taskKeys = {
-    spawnTartars = "spawnTartars",
-    spawnToothDecayMonsters = "spawnToothDecayMonsters",
     spawnSaliva = "spawnSaliva",
 }
-
-local function spawnMobs(interval: number, mobFolder: Folder & { Model }, mobClass ) : Types.TaskType
-    local function _action()
-        local mobCount = #mobFolder:GetChildren()
-        if mobCount > 10 then
-            return
-        end
-
-        local mob = mobClass.new()
-        local function __action()
-            mob:Act()
-            if not mob:CanAct() then
-                globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, mob.name .. mobCount)
-            end
-        end
-
-        local mobTask: Types.TaskType = {
-            Action = __action,
-        }
-        
-        globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, mob.name .. mobCount, mobTask)
-    end
-
-    local spawnTask: Types.TaskType = {
-        DeltaTime = 0,
-        Interval = interval,
-        Action = _action,
-    }
-    return spawnTask
-end
-
-local function spawnToothDecayMonsters(currentWave: number)
-    local toothDecayMobsModels = {
-        "ToothDaceyMob",
-        "PulpitusMob",
-        "ParodontitusMob"
-    }
-
-    local spawnToothDecayMonstersTask = spawnMobs(10, Map.Interact.Monsters.ToothDecay, MobsHandler.ToothDecayMonster)
-    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, _taskKeys.spawnTartars, spawnToothDecayMonstersTask)
-end
-
-local function spawnTartarMonsters()
-    local spawnTartarTask = spawnMobs(10, Map.Interact.Monsters.Tartar, MobsHandler.Tartar)
-    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, _taskKeys.spawnTartars, spawnTartarTask)
-end
 
 local function spawnToothDecay(currentWave: number)
     local toothDecayModels = {
@@ -120,8 +72,6 @@ end
 
 local function finishRound()
     globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, _taskKeys.spawnSaliva)
-    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, _taskKeys.spawnTartars)
-    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, _taskKeys.spawnToothDecayMonsters)
     _connections[_connectionKeys.onCurrentWaveChanged]:Disconnect()
 end
 
@@ -132,9 +82,6 @@ local function startRound()
         spawnToothDecay()
         spawnTartars()
         spawnSaliva()
-
-        spawnToothDecayMonsters()
-        spawnTartarMonsters()
     end
 
     _connections[_connectionKeys.onCurrentWaveChanged] = RoundSystemVariables.CurrentWave.Changed:Connect(onCurrentWaveChanged)

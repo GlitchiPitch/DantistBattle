@@ -1,12 +1,8 @@
-type MapType = Folder & {
-    Spawner: Part,
-    MobSpawners: Folder & { Part },
-    ToothProblemPoints: Folder & { Part },
-    Saliva: Part,
-}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Types = require(ReplicatedStorage.Types)
 
 local Instances = {
-    Map = nil :: MapType,
+    Map = nil :: Types.MapType,
 }
 
 return Instances

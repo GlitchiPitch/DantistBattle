@@ -12,44 +12,44 @@ local Tartar = require(Classes.Tartar)
 local ToothDecay = require(Classes.ToothDecay)
 
 local Mobas = {
-    [1] = ToothDecay,
-    [2] = Tartar,
+	[1] = ToothDecay,
+	[2] = Tartar,
 }
 
 local MOB_COUNT = 10
 
-local function clearMobs()
-    
-end
+local function clearMobs() end
 
 local function spawnMobs()
-    local currentMob = Mobas[Variables.CurrentWave.Value]
-    local _mobSpawners = Instances.Map.MobSpawners:GetChildren()
-    -- TODO: at the future add difficult
-    for _ = 1, MOB_COUNT do
-        local _mob = currentMob.New()
-        local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
-        _mob:Initialize(_mobSpawner)
-    end
+	local currentMob = Mobas[Variables.CurrentWave.Value]
+	local _mobSpawners = Instances.Map.Interact.MobSpawners:GetChildren()
+	-- TODO: at the future add difficult
+	for _ = 1, MOB_COUNT do
+		local _mob = currentMob.New()
+		local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
+		_mob:Initialize(_mobSpawner)
+	end
 end
 
 local function startRound()
-    spawnMobs()
+	spawnMobs()
 end
 
+local function finishRound() end
+
 local function eventConnect(action: string, ...: any)
-    local actions = {
-        [eventActions.startRound] = startRound,
-    }
-    
-    if actions[action] then
-        actions[action](...)
-    end
+	local actions = {
+		[eventActions.startRound] = startRound,
+		[eventActions.finishRound] = finishRound,
+	}
+
+	if actions[action] then
+		actions[action](...)
+	end
 end
 
 local function initialize()
-    event.Event:Connect(eventConnect)
+	event.Event:Connect(eventConnect)
 end
-
 
 return { initialize = initialize }
