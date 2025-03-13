@@ -19,7 +19,7 @@ export type BaseMobType = {
     configuration: Types.ConfigurationType,
     animations: Types.AnimationListType,
     cache: {
-        targets: { {} }, -- { classes }
+        targets: { BaseMobType }, -- { classes }
         boosts: { [string]: number },
         effects: { [string]: number },        
     },
@@ -31,27 +31,35 @@ export type BaseMobType = {
     CanAct: () -> boolean,
     Act: () -> (),
     UpdateCache: () -> (),
+    Destroy: () -> (),
 }
 
 function BaseMob.new(mobData: Types.MobData) : BaseMobType
     local self = {
-        -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов чтобы было легче респавнить
+        -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов по имени чтобы было легче респавнить
         model = mobData.model,
         hp = mobData.hp,
         -- TODO: возможно поместить в таблицу
         configuration = mobData.configuration,
         animations = mobData.animations,
         cache = {
-            targets = {} :: { {} }, -- { classes }
-            boosts = {} :: { [string]: number },
-            effects = {} :: { [string]: number },
+            targets = {},
+            boosts = {},
+            effects = {},
         },
     }
 
 	return setmetatable(self, BaseMob)
 end
 
-BaseMob.Initialize = function(self, spawnPoint: Part)
+--[[
+    Intitialize run:
+    * load animations to humanoid
+    * setup the mob to workspace and specific position
+    * send main loop of the mob to the global timer
+    * and check if mob was died do remove main loop from the global timer
+]]
+BaseMob.Initialize = function(self: BaseMobType, spawnPoint: Part)
     self:LoadAnimation()
     self.model = self.model:Clone()
     self.model.Parent = spawnPoint
@@ -66,7 +74,7 @@ BaseMob.Initialize = function(self, spawnPoint: Part)
         end
     
         if not self:CheckAlive() then
-            self:Died()
+            self:Destroy()
             return
         end
 
@@ -78,6 +86,10 @@ BaseMob.Initialize = function(self, spawnPoint: Part)
     }
 
     globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "", mobTask)
+end
+
+BaseMob.Act = function(self: BaseMobType)
+    -- implement this method from child classes
 end
 
 BaseMob.LoadAnimation = function(self)
@@ -93,10 +105,9 @@ end
 -- at the future send to this function targetPosition: Vector3
 BaseMob.Move = function(self: BaseMobType)
     local target = self.cache.targets[1] :: BaseMobType
-    local targetModel = target.model
-    local targetHumanoidRootPart = targetModel:FindFirstChild("HumanoidRootPart") :: Part
+    local targetPosition = target.model:GetPivot().Position
     local humanoid = self.model:FindFirstChildOfClass("Humanoid")
-    humanoid:MoveTo(targetHumanoidRootPart.Position)
+    humanoid:MoveTo(targetPosition)
 end
 
 -- BaseMob.bibi = function(self)
@@ -108,14 +119,12 @@ end
 -- 	print("Parent's bebe() method called")
 -- end
 
-
-BaseMob.CheckAlive = function(self)
-    local humanoid = self.model:FindFirstChildOfClass("Humanoid")
-    return (humanoid.Health > 0)
+BaseMob.CheckAlive = function(self: BaseMobType) : boolean
+    return self.hp > 0
 end
 
 -- check what effects that block action player has
-BaseMob.CanAct = function(self) : boolean
+BaseMob.CanAct = function(self: BaseMobType) : boolean
 
     for _, effect in Constants.EFFECT_KEYS do
         if self.cache.effects[effect] then
@@ -126,22 +135,25 @@ BaseMob.CanAct = function(self) : boolean
     return true
 end
 
-BaseMob.Act = function(self)
-    -- implement this method from child classes
-end
-
 -- check temporary items from cache like a boost or effects
-BaseMob.UpdateCache = function(self)
-    -- or make itearate only effects and boosts not targets
-    for cacheItemName, _cache in self.cache do
-        for _cacheItemName, v in _cache do
-            if v > 0 then
-                self.cache[cacheItemName][_cacheItemName] -= 1
-            elseif v == 0 then
-                self.cache[cacheItemName][_cacheItemName] = nil
+BaseMob.UpdateCache = function(self: BaseMobType)
+
+    local function _iterateCache(cacheName: string, _cache: { [string]: number })
+        for cacheItemName, cacheValue in _cache do
+            if cacheValue > 0 then
+                self.cache[cacheName][cacheItemName] -= 1
+            elseif cacheValue <= 0 then
+                self.cache[cacheName][cacheItemName] = nil
             end
         end
     end
+
+    _iterateCache("boosts", self.cache.boosts)
+    _iterateCache("effects", self.cache.effects)
+end
+
+BaseMob.Destroy = function(self: BaseMobType)
+    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, "")
 end
 
 return BaseMob

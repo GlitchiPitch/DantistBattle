@@ -8,12 +8,12 @@ local event = RoundSystem.Events.Event
 local eventActions = require(event.Actions)
 
 local Classes = script.Classes
-local TartarClass = require(Classes.TartarClass)
-local ToothDecayMonster = require(Classes.ToothDecayMonster)
+local Tartar = require(Classes.Tartar)
+local ToothDecay = require(Classes.ToothDecay)
 
 local Mobas = {
-    [1] = ToothDecayMonster,
-    [2] = TartarClass, -- Tartar
+    [1] = ToothDecay,
+    [2] = Tartar,
 }
 
 local MOB_COUNT = 10
@@ -29,7 +29,7 @@ local function spawnMobs()
     for _ = 1, MOB_COUNT do
         local _mob = currentMob.New()
         local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
-        _mob:Initialize(_mobSpawners)
+        _mob:Initialize(_mobSpawner)
     end
 end
 

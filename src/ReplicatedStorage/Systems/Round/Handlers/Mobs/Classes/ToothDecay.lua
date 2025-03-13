@@ -7,6 +7,8 @@ local toothDecayModel = Instance.new("Model")
 local ToothDecay = setmetatable({}, { __index = AttackingMob })
 ToothDecay.__index = ToothDecay
 
+export type ToothDecayType = AttackingMob.AttackingMobType
+
 local TOOTH_DECAY_DATA: Types.MobData = {
     model = toothDecayModel,
     hp = 10,
@@ -17,18 +19,8 @@ local TOOTH_DECAY_DATA: Types.MobData = {
     }
 }
 
-function ToothDecay.New()
+function ToothDecay.New() : ToothDecayType
     return setmetatable(AttackingMob.new(TOOTH_DECAY_DATA), ToothDecay)
 end
-
-ToothDecay.Act = function(self: ToothDecayType)
-    if #self.cache.targets == 0 then
-        self:FindTarget()
-    else
-        self:Attack()
-    end
-end
-
-export type ToothDecayType = typeof(ToothDecay.New())
 
 return ToothDecay

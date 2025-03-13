@@ -5,6 +5,8 @@ local Types = require(Mobs.Parent.Types)
 local Tartar = setmetatable({}, { __index = AttackingMob })
 Tartar.__index = Tartar
 
+export type TartarType = AttackingMob.AttackingMobType
+
 local TARTAR_DATA: Types.MobData = {
 	model = Instance.new("Model"),
 	hp = 100,
@@ -20,19 +22,9 @@ local TARTAR_DATA: Types.MobData = {
 	},
 }
 
-function Tartar.New()
+function Tartar.New() : TartarType
 	return setmetatable(AttackingMob.new(TARTAR_DATA), Tartar)
 end
-
-Tartar.Act = function(self: TartarClassType)
-    if #self.cache.targets == 0 then
-        self:FindTarget()
-    else
-        self:Attack()
-    end
-end
-
-export type TartarClassType = typeof(Tartar.New())
 
 return Tartar
 

@@ -5,14 +5,15 @@ local getMagnitude = require(Utility.getMagnitude)
 
 local Mobs = script.Parent
 local Types = require(Mobs.Parent.Types)
-local BaseMob = require(Mobs.BaseMobClass)
+local BaseMob = require(Mobs.BaseMob)
 
 local AttackingMob = setmetatable({}, { __index = BaseMob })
 AttackingMob.__index = AttackingMob
 
 export type AttackingMobType = BaseMob.BaseMobType & {
-    FindTarget: (enemyUnits: { Model }) -> (),
+    FindTarget: (enemyUnits: { BaseMob.BaseMobType }) -> (),
     Attack: () -> (),
+    CheckValidTarget: () -> boolean,
 }
 
 function AttackingMob.New(mobData: Types.MobData) : AttackingMobType
@@ -20,7 +21,7 @@ function AttackingMob.New(mobData: Types.MobData) : AttackingMobType
 end
 
 -- at the future make a multi target feature
-AttackingMob.FindTarget = function(self: AttackingMobType, enemyUnits: { Model }) -- or { classes }
+AttackingMob.FindTarget = function(self: AttackingMobType, enemyUnits: { BaseMob.BaseMobType }) -- or { classes }
     for _, enemy in enemyUnits do
         if self.configuration.targetDistance < getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position) then
             table.insert(self.cache.targets, enemy)
@@ -33,9 +34,9 @@ AttackingMob.Attack = function(self: AttackingMobType)
     local enemy = self.cache.targets[1] :: BaseMob.BaseMobType
 
     local function _doDamage()
-        local humanoid = enemy.model:FindFirstChildOfClass("Humanoid")
         enemy.hp -= self.configuration.damage
-        humanoid.Health = enemy.hp
+        -- local humanoid = enemy.model:FindFirstChildOfClass("Humanoid")
+        -- humanoid.Health = enemy.hp
     end
 
     local function _attack()
@@ -62,6 +63,22 @@ AttackingMob.Attack = function(self: AttackingMobType)
 
     print(self.name, "Attack")
 end
+
+AttackingMob.CheckValidTarget = function(self: AttackingMobType) : boolean
+    local target = self.cache.targets[1] :: BaseMob.BaseMobType
+    return target.hp > 0
+end
+
+AttackingMob.Act = function(self: AttackingMobType)
+    if #self.cache.targets == 0 then
+        self:FindTarget()
+    else
+        if self:CheckValidTarget() then
+            self:Attack()
+        end
+    end
+end
+
 
 -- export type AttackingMobType = typeof()
 
