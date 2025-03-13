@@ -1,13 +1,13 @@
 local Mobs = script.Parent
 local Types = require(Mobs.Parent.Types)
-local BaseMobClass = require(Mobs.BaseMobClass)
+local AttackingMob = require(Mobs.AttackingMob)
 
 local toothDecayModel = Instance.new("Model")
 
-local ToothDecayMonster = {}
-ToothDecayMonster.__index = ToothDecayMonster
+local ToothDecay = setmetatable({}, { __index = AttackingMob })
+ToothDecay.__index = ToothDecay
 
-local toothDecayMobData: Types.MobData = {
+local TOOTH_DECAY_DATA: Types.MobData = {
     model = toothDecayModel,
     hp = 10,
     configuration = {
@@ -17,18 +17,18 @@ local toothDecayMobData: Types.MobData = {
     }
 }
 
-function ToothDecayMonster.new()
-    local super = BaseMobClass.New(toothDecayMobData)
-    -- super:Initialize()
-
-    local self = super
-    return setmetatable(self, ToothDecayMonster)
+function ToothDecay.New()
+    return setmetatable(AttackingMob.new(TOOTH_DECAY_DATA), ToothDecay)
 end
 
--- ToothDecayMonster.Initialize = function(self: ToothDecayMonsterType)
-    
--- end
+ToothDecay.Act = function(self: ToothDecayType)
+    if #self.cache.targets == 0 then
+        self:FindTarget()
+    else
+        self:Attack()
+    end
+end
 
-export type ToothDecayMonsterType = typeof(ToothDecayMonster.new())
+export type ToothDecayType = typeof(ToothDecay.New())
 
-return ToothDecayMonster
+return ToothDecay
