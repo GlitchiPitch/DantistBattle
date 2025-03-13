@@ -26,8 +26,8 @@ local function spawnMobs()
     local currentMob = Mobas[Variables.CurrentWave.Value]
     local _mobSpawners = Instances.Map.MobSpawners:GetChildren()
     -- TODO: at the future add difficult
-    for i = 1, MOB_COUNT do
-        local _mob = currentMob.new()
+    for _ = 1, MOB_COUNT do
+        local _mob = currentMob.New()
         local _mobSpawner = _mobSpawners[math.random(#_mobSpawners)] :: Part
         _mob:Initialize(_mobSpawners)
     end

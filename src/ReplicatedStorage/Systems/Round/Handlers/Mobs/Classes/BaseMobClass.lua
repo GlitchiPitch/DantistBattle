@@ -13,6 +13,26 @@ local Types = require(MobsHandler.Types)
 local BaseMob = {}
 BaseMob.__index = BaseMob
 
+export type BaseMobType = {
+    model: Model,
+    hp: number,
+    configuration: Types.ConfigurationType,
+    animations: Types.AnimationListType,
+    cache: {
+        targets: { {} }, -- { classes }
+        boosts: { [string]: number },
+        effects: { [string]: number },        
+    },
+
+    Initialize: (spawnPoint: Part) -> (),
+    LoadAnimation: () -> (),
+    Move: () -> (),
+    CheckAlive: () -> (),
+    CanAct: () -> boolean,
+    Act: () -> (),
+    UpdateCache: () -> (),
+}
+
 function BaseMob.new(mobData: Types.MobData)
     local self = {
         -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов чтобы было легче респавнить
@@ -68,6 +88,15 @@ BaseMob.LoadAnimation = function(self)
         animation.AnimationId = animationId
         self.animations[animName] = animator:LoadAnimation(animation)
     end
+end
+
+-- at the future send to this function targetPosition: Vector3
+BaseMob.Move = function(self: BaseMobType)
+    local target = self.cache.targets[1] :: BaseMobType
+    local targetModel = target.model
+    local targetHumanoidRootPart = targetModel:FindFirstChild("HumanoidRootPart") :: Part
+    local humanoid = self.model:FindFirstChildOfClass("Humanoid")
+    humanoid:MoveTo(targetHumanoidRootPart.Position)
 end
 
 -- BaseMob.bibi = function(self)
