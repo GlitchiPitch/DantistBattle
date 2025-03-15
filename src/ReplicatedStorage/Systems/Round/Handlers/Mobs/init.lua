@@ -1,3 +1,7 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GlobalUtility = ReplicatedStorage.Utility
+local clearConnections = require(GlobalUtility.clearConnections)
+
 local Handlers = script.Parent
 local RoundSystem = Handlers.Parent
 
@@ -17,8 +21,17 @@ local Mobas = {
 }
 
 local MOB_COUNT = 10
+local _connections: { [string]: RBXScriptConnection } = {}
+local _connectionKeys = {
+	eventConnect = "eventConnect",
+	onCurrentWaveChanged = "onCurrentWaveChanged",
+}
 
-local function clearMobs() end
+local function clearMobs() 
+	for _, v: Part in Instances.Map.Interact.MobSpawners:GetChildren() do
+		v:ClearAllChildren()
+	end
+end
 
 local function spawnMobs()
 	local currentMob = Mobas[Variables.CurrentWave.Value]
@@ -31,11 +44,30 @@ local function spawnMobs()
 	end
 end
 
+--[[
+	Добрый день, это преподаватель Никита, я хотел бы еще поговорить по поводу заинтересованности Софьи в уроках по роблоксу
+	уже третье занятие продуктивность очень сильно упала, Софья на фоне смотрит ютуб, и на фоне работает ютуб, я говорил что я слышу что он работает,
+	но эффекта это не возымело, и раз вообще такая ситуация происходит, я думаю что стоит уточить есть ли желание заниматься,
+	чтобы потратить время на то что действительно интересно
+]]
+
 local function startRound()
-	spawnMobs()
+
+	local function onCurrentWaveChanged(value: number)
+		if value == 0 then return end
+		spawnMobs()
+	end
+
+	_connections[_connectionKeys.onCurrentWaveChanged] = Variables.CurrentWave.Changed:Connect(onCurrentWaveChanged)
 end
 
-local function finishRound() end
+local function finishRound()
+
+	clearMobs()
+	clearConnections(_connections, function(connectIndex: string)
+		return connectIndex ~= _connectionKeys.eventConnect
+	end)
+end
 
 local function eventConnect(action: string, ...: any)
 	local actions = {
@@ -49,7 +81,7 @@ local function eventConnect(action: string, ...: any)
 end
 
 local function initialize()
-	event.Event:Connect(eventConnect)
+	_connections[_connectionKeys.eventConnect] = event.Event:Connect(eventConnect)
 end
 
 return { initialize = initialize }

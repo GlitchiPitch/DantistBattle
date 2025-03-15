@@ -24,6 +24,9 @@ local eventActions = require(event.Actions)
 -- local remoteActions = require(remote.Actions)
 
 local _connections: { [string]: RBXScriptConnection } = {}
+local _connectionKeys = {
+	eventConnect = "eventConnect",
+}
 
 local function teleportPlayers(team: Types.TeamType)
 	local spawner = Instances.Map.Interact.SpawnLocations:GetChildren()[1] :: Part
@@ -47,7 +50,6 @@ end
 ]]
 
 local function reset()
-	_connections["onCurrentWaveChanged"]:Disconnect()
 	Variables.RoundTimer.Value = 0
 	Variables.CurrentWave.Value = 0
 end
@@ -79,15 +81,12 @@ local function startRound()
 		Action = updateRound,
 	}
 
-	local function onCurrentWaveChanged(value: number) end
-
 	Variables.RoundTimer.Value = Constants.ROUND_TIME
 	Variables.CurrentWave.Value = 1
 	-- for quests handler & mobs handler
 	event:Fire(eventActions.startRound)
 	globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "ROUND", roundTask)
 
-	_connections["onCurrentWaveChanged"] = Variables.CurrentWave.Changed:Connect(onCurrentWaveChanged)
 end
 
 local function startGame(team: Types.TeamType)
@@ -110,7 +109,7 @@ local function initialize()
 	PlayerHandler.initialize()
 	MobHandler.initialize()
 
-	_connections["eventConnect"] = event.Event:Connect(eventConnect)
+	_connections[_connectionKeys.eventConnect] = event.Event:Connect(eventConnect)
 end
 
 return { initialize = initialize }
