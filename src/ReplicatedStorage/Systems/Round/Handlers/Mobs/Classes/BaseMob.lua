@@ -7,34 +7,14 @@ local GlobalTimer = ReplicatedStorage.GlobalTimer
 local globalTimerEvent = GlobalTimer.Events.Event
 local globalTimerEventActions = require(globalTimerEvent.Actions)
 
-local MobsHandler = script.Parent.Parent
-local Types = require(MobsHandler.Types)
+local Classes = script.Parent
+local Types = require(Classes.Types)
 
 local BaseMob = {}
 BaseMob.__index = BaseMob
 
-export type BaseMobType = {
-    model: Model,
-    hp: number,
-    configuration: Types.ConfigurationType,
-    animations: Types.AnimationListType,
-    cache: {
-        targets: { BaseMobType }, -- { classes }
-        boosts: { [string]: number },
-        effects: { [string]: number },        
-    },
 
-    Initialize: (spawnPoint: Part) -> (),
-    LoadAnimation: () -> (),
-    Move: () -> (),
-    CheckAlive: () -> (),
-    CanAct: () -> boolean,
-    Act: () -> (),
-    UpdateCache: () -> (),
-    Destroy: () -> (),
-}
-
-function BaseMob.new(mobData: Types.MobData) : BaseMobType
+BaseMob.New = function(mobData: Types.BaseMobDataType) : Types.BaseMobType
     local self = {
         -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов по имени чтобы было легче респавнить
         model = mobData.model,
