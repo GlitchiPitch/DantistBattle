@@ -14,10 +14,14 @@ local eventActions = require(event.Actions)
 local Classes = script.Classes
 local Tartar = require(Classes.Tartar)
 local ToothDecay = require(Classes.ToothDecay)
+local Pulpitus = require(script.Classes.Pulpitus)
+local Periodontitis = require(script.Classes.Periodontitis)
 
 local Mobas = {
 	[1] = ToothDecay,
 	[2] = Tartar,
+	[3] = Pulpitus,
+	[4] = Periodontitis,
 }
 
 local MOB_COUNT = 10

@@ -1,15 +1,15 @@
-local Mobs = script.Parent
-local Types = require(Mobs.Parent.Types)
-local AttackingMob = require(Mobs.AttackingMob)
+local Classes = script.Parent
+local Types = require(Classes.Types)
+local AttackingMob = require(Classes.AttackingMob)
 
 local toothDecayModel = Instance.new("Model")
 
 local ToothDecay = setmetatable({}, { __index = AttackingMob })
 ToothDecay.__index = ToothDecay
 
-export type ToothDecayType = AttackingMob.AttackingMobType
+export type ToothDecayType = Types.AttackingMobType
 
-local TOOTH_DECAY_DATA: Types.MobData = {
+local TOOTH_DECAY_DATA: Types.BaseMobDataType = {
     model = toothDecayModel,
     hp = 10,
     configuration = {

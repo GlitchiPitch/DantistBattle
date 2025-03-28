@@ -3,25 +3,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Utility = ReplicatedStorage.Utility
 local getMagnitude = require(Utility.getMagnitude)
 
-local Mobs = script.Parent
-local Types = require(Mobs.Parent.Types)
-local BaseMob = require(Mobs.BaseMob)
+local Classes = script.Parent
+local Types = require(Classes.Types)
+local BaseMob = require(Classes.BaseMob)
 
 local AttackingMob = setmetatable({}, { __index = BaseMob })
 AttackingMob.__index = AttackingMob
 
-export type AttackingMobType = BaseMob.BaseMobType & {
-    FindTarget: (enemyUnits: { BaseMob.BaseMobType }) -> (),
-    Attack: () -> (),
-    CheckValidTarget: () -> boolean,
-}
-
-function AttackingMob.New(mobData: Types.MobData) : AttackingMobType
+function AttackingMob.New(mobData: Types.BaseMobDataType) : Types.AttackingMobType
     return setmetatable(BaseMob.new(mobData), AttackingMob)
 end
 
 -- at the future make a multi target feature
-AttackingMob.FindTarget = function(self: AttackingMobType, enemyUnits: { BaseMob.BaseMobType }) -- or { classes }
+AttackingMob.FindTarget = function(self: Types.AttackingMobType, enemyUnits: { Types.BaseMobType }) -- or { classes }
     for _, enemy in enemyUnits do
         if self.configuration.targetDistance < getMagnitude(enemy:GetPivot().Position, self.model:GetPivot().Position) then
             table.insert(self.cache.targets, enemy)
@@ -30,8 +24,8 @@ AttackingMob.FindTarget = function(self: AttackingMobType, enemyUnits: { BaseMob
     end
 end
 
-AttackingMob.Attack = function(self: AttackingMobType)
-    local enemy = self.cache.targets[1] :: BaseMob.BaseMobType
+AttackingMob.Attack = function(self: Types.AttackingMobType)
+    local enemy = self.cache.targets[1] :: Types.BaseMobType
 
     local function _doDamage()
         enemy.hp -= self.configuration.damage
@@ -60,16 +54,15 @@ AttackingMob.Attack = function(self: AttackingMobType)
             self:Move()
         end
     end
-
-    print(self.name, "Attack")
+    
 end
 
-AttackingMob.CheckValidTarget = function(self: AttackingMobType) : boolean
-    local target = self.cache.targets[1] :: BaseMob.BaseMobType
+AttackingMob.CheckValidTarget = function(self: Types.AttackingMobType) : boolean
+    local target = self.cache.targets[1] :: Types.BaseMobType
     return target.hp > 0
 end
 
-AttackingMob.Act = function(self: AttackingMobType)
+AttackingMob.Act = function(self: Types.AttackingMobType)
     if #self.cache.targets == 0 then
         self:FindTarget()
     else
@@ -78,8 +71,5 @@ AttackingMob.Act = function(self: AttackingMobType)
         end
     end
 end
-
-
--- export type AttackingMobType = typeof()
 
 return AttackingMob

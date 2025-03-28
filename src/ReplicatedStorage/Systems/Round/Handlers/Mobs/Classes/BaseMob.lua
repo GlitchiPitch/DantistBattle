@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
 
 local GlobalTypes = require(ReplicatedStorage.Types)
 local Constants = require(ReplicatedStorage.Constants)
@@ -13,12 +14,12 @@ local Types = require(Classes.Types)
 local BaseMob = {}
 BaseMob.__index = BaseMob
 
-
 BaseMob.New = function(mobData: Types.BaseMobDataType) : Types.BaseMobType
     local self = {
         -- TODO: возможно потом не подгружать модель в начале, а вытаскиваь из ассетов по имени чтобы было легче респавнить
         model = mobData.model,
         hp = mobData.hp,
+        id = HttpService:GenerateGUID(),
         -- TODO: возможно поместить в таблицу
         configuration = mobData.configuration,
         animations = mobData.animations,
@@ -32,14 +33,7 @@ BaseMob.New = function(mobData: Types.BaseMobDataType) : Types.BaseMobType
 	return setmetatable(self, BaseMob)
 end
 
---[[
-    Intitialize run:
-    * load animations to humanoid
-    * setup the mob to workspace and specific position
-    * send main loop of the mob to the global timer
-    * and check if mob was died do remove main loop from the global timer
-]]
-BaseMob.Initialize = function(self: BaseMobType, spawnPoint: Part)
+BaseMob.Initialize = function(self: Types.BaseMobType, spawnPoint: Part)
     self:LoadAnimation()
     self.model = self.model:Clone()
     self.model.Parent = spawnPoint
@@ -65,10 +59,10 @@ BaseMob.Initialize = function(self: BaseMobType, spawnPoint: Part)
         Action = _mobAction,
     }
 
-    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, "", mobTask)
+    globalTimerEvent:Fire(globalTimerEventActions.addTaskToTimer, self.id, mobTask)
 end
 
-BaseMob.Act = function(self: BaseMobType)
+BaseMob.Act = function(self: Types.BaseMobType)
     -- implement this method from child classes
 end
 
@@ -83,28 +77,19 @@ BaseMob.LoadAnimation = function(self)
 end
 
 -- at the future send to this function targetPosition: Vector3
-BaseMob.Move = function(self: BaseMobType)
-    local target = self.cache.targets[1] :: BaseMobType
+BaseMob.Move = function(self: Types.BaseMobType)
+    local target = self.cache.targets[1] :: Types.BaseMobType
     local targetPosition = target.model:GetPivot().Position
     local humanoid = self.model:FindFirstChildOfClass("Humanoid")
     humanoid:MoveTo(targetPosition)
 end
 
--- BaseMob.bibi = function(self)
--- 	print("Parent's bibi() method called")
--- 	self:bebe()  -- Calls bebe() (will use Child's version if overridden)
--- end
-
--- BaseMob.bebe = function()
--- 	print("Parent's bebe() method called")
--- end
-
-BaseMob.CheckAlive = function(self: BaseMobType) : boolean
+BaseMob.CheckAlive = function(self: Types.BaseMobType) : boolean
     return self.hp > 0
 end
 
 -- check what effects that block action player has
-BaseMob.CanAct = function(self: BaseMobType) : boolean
+BaseMob.CanAct = function(self: Types.BaseMobType) : boolean
 
     for _, effect in Constants.EFFECT_KEYS do
         if self.cache.effects[effect] then
@@ -116,7 +101,7 @@ BaseMob.CanAct = function(self: BaseMobType) : boolean
 end
 
 -- check temporary items from cache like a boost or effects
-BaseMob.UpdateCache = function(self: BaseMobType)
+BaseMob.UpdateCache = function(self: Types.BaseMobType)
 
     local function _iterateCache(cacheName: string, _cache: { [string]: number })
         for cacheItemName, cacheValue in _cache do
@@ -132,8 +117,8 @@ BaseMob.UpdateCache = function(self: BaseMobType)
     _iterateCache("effects", self.cache.effects)
 end
 
-BaseMob.Destroy = function(self: BaseMobType)
-    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, "")
+BaseMob.Destroy = function(self: Types.BaseMobType)
+    globalTimerEvent:Fire(globalTimerEventActions.removeTaskFromTimer, self.id)
 end
 
 return BaseMob

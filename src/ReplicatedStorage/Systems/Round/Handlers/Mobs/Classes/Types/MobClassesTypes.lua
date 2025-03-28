@@ -3,6 +3,7 @@ local GlobalTypes = require(script.Parent.GlobalTypes)
 export type BaseMobType = {
     model: Model,
     hp: number,
+    id: string,
     configuration: GlobalTypes.ConfigurationType,
     animations: GlobalTypes.AnimationListType,
     cache: {
@@ -19,6 +20,12 @@ export type BaseMobType = {
     Act: () -> (),
     UpdateCache: () -> (),
     Destroy: () -> (),
+}
+
+export type AttackingMobType = BaseMobType & {
+    FindTarget: (enemyUnits: { BaseMobType }) -> (),
+    Attack: () -> (),
+    CheckValidTarget: () -> boolean,
 }
 
 return {}
